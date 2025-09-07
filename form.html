@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ข้อมูลส่วนตัว</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <h2>กรอกข้อมูลส่วนตัว</h2>
+
+  <label>เพศ:</label><br>
+  <select id="gender">
+    <option value="ชาย">ชาย</option>
+    <option value="หญิง">หญิง</option>
+    <option value="LGBTQ">LGBTQ</option>
+  </select><br><br>
+
+  <label>อายุ:</label><br>
+  <select id="age">
+    <option>19</option><option>20</option><option>21</option>
+    <option>22</option><option>23</option><option>24</option><option>25</option>
+  </select><br><br>
+
+  <label>สถานะ:</label><br>
+  <select id="status">
+    <option>โสด</option><option>มีแฟน</option><option>ไม่บอกหรอก</option>
+  </select><br><br>
+
+  <label>ชั้นปี:</label><br>
+  <select id="year">
+    <option>ชั้นปีที่ 1</option><option>ชั้นปีที่ 2</option><option>ชั้นปีที่ 3</option><option>ชั้นปีที่ 4</option>
+  </select><br><br>
+
+  <button onclick="submitForm()">บันทึก</button>
+
+  <script>
+    async function submitForm() {
+      await liff.init({ liffId: "2008068059-RwZVbkn9" });
+      const profile = await liff.getProfile();
+
+      const payload = {
+        userId: profile.userId,
+        displayName: profile.displayName,
+        gender: document.getElementById("gender").value,
+        age: document.getElementById("age").value,
+        status: document.getElementById("status").value,
+        year: document.getElementById("year").value
+      };
+
+      // ส่งไป Google Sheets
+      await fetch("https://script.google.com/macros/s/AKfycbyO4i_BrJ1-lAAkjasWQ11MA_rn9_Kf891aUUO-kCjpNKuE7q7eoIgkBcXUIAzvVl7n/exec", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+
+      // ส่งข้อความกลับไปยัง LINE OA
+      await liff.sendMessages([{
+        type: "text",
+        text: "✅ ข้อมูลของคุณถูกบันทึกเป็นความลับเรียบร้อยแล้ว"
+      }]);
+
+      liff.closeWindow();
+    }
+  </script>
+</body>
+</html>
