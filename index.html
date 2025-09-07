@@ -31,6 +31,10 @@
         animation: fadeIn 0.8s ease-in-out;
     }
 
+    h1, h2, h3 {
+        color: #4a00e0;
+    }
+
     /* ปรับขนาดตัวอักษรและระยะห่างสำหรับมือถือ */
     h1 {
         font-size: 1.8em; /* ลดขนาด H1 */
@@ -45,7 +49,6 @@
     }
     h3 {
         font-size: 1.2em; /* ลดขนาด H3 */
-        color: #2a7e7e;
         margin-top: 20px;
     }
     ul, ol {
@@ -60,12 +63,18 @@
         color: #0056b3;
     }
     .disclaimer {
+        background-color: #f8d7da;
+        border-left: 5px solid #dc3545;
         padding: 15px;
-        margin-top: 15px;
+        margin-top: 20px;
+        font-style: italic;
         font-size: 0.9em; /* ลดขนาดตัวอักษรในส่วนนี้ */
+        color: #721c24;
     }
     .contact-info {
+      background-color: #e9ecef;
         padding: 15px;
+        border-radius: 5px;
         margin-top: 30px;
     }
     .terms-box {
@@ -91,8 +100,17 @@
     }
 
     button {
+      background: linear-gradient(90deg, #4a00e0, #8e2de2);
+      border: none;
+       color: white;
+       cursor: pointer;
         font-size: 1em; /* ปรับขนาดปุ่มให้พอดี */
         padding: 10px 25px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.2);
     }
 
     @keyframes fadeIn {
@@ -168,6 +186,7 @@
   <button onclick="accept()">ยอมรับเงื่อนไข</button>
   <button onclick="liff.closeWindow()">ทดสอบปิดหน้าต่าง</button>
 </div>
+</div>
 
 <script>
 // เริ่ม init ตอนโหลดหน้า
@@ -195,8 +214,7 @@ async function accept() {
     // ดึง profile
     const profile = await liff.getProfile();
 
-    // userId เอาจาก decodedIDToken ถ้า login ผ่าน LINE Login
-    // แต่ถ้าเปิดใน OA context ให้ใช้ liff.getContext().userId
+    // userId: ใช้จาก context ถ้าเปิดใน OA, ถ้าเปิดจาก Login ให้ใช้ decodedID
     let userId = "";
     if (liff.getContext() && liff.getContext().userId) {
       userId = liff.getContext().userId;
@@ -210,53 +228,34 @@ async function accept() {
       userId: userId
     };
 
-    // ส่งไป Google Sheets
-    const response = await fetch("https://script.google.com/macros/s/AKfycbyO4i_BrJ1-lAAkjasWQ11MA_rn9_Kf891aUUO-kCjpNKuE7q7eoIgkBcXUIAzvVl7n/exec", {
+    // ✅ ส่งข้อมูลไป Google Sheets (ไม่ต้องรอ response)
+    await fetch("https://script.google.com/macros/s/AKfycbyO4i_BrJ1-lAAkjasWQ11MA_rn9_Kf891aUUO-kCjpNKuE7q7eoIgkBcXUIAzvVl7n/exec", {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-      mode: 'no-cors'
+      mode: "no-cors"
     });
 
-    const text = await response.text();
-    console.log("GAS raw response:", text);
+    // ✅ ส่งข้อความกลับเข้า LINE OA
+    if (liff.isInClient()) {
+      await liff.sendMessages([{
+        type: "text",
+        text: "✅ คุณได้ยอมรับเงื่อนไขเรียบร้อยแล้ว"
+      }]);
 
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.error("Response ไม่ใช่ JSON:", e);
-      alert("❌ GAS ส่งข้อมูลไม่ถูกต้อง: " + text);
-      return;
-    }
+      // ปิดหน้าต่าง LIFF → กลับเข้าแชท OA ต่อทันที
+      liff.closeWindow();
 
-    if (data.status === "success") {
-      try {
-        if (liff.isInClient()) {
-          await liff.sendMessages([{
-            type: "text",
-            text: "✅ คุณได้ยอมรับเงื่อนไขเรียบร้อยแล้ว"
-          }]);
-          liff.closeWindow(); // ปิดเฉพาะใน LINE OA
-        } else {
-          alert("✅ บันทึกสำเร็จ (แต่คุณเปิดใน browser ธรรมดา จึงไม่สามารถปิดอัตโนมัติได้)");
-        }
-      } catch (e) {
-        console.warn("ส่งข้อความไม่สำเร็จ:", e);
-      }
     } else {
-      alert("❌ ไม่สามารถบันทึกข้อมูลได้");
+      // กรณีเปิดจาก browser ธรรมดา
+      alert("✅ บันทึกสำเร็จ! (แต่คุณเปิดใน browser ธรรมดา จึงไม่สามารถปิดอัตโนมัติได้)");
     }
+
   } catch (err) {
     console.error("เกิดข้อผิดพลาด:", err);
     alert("⚠️ มีปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง");
   }
 }
-
 </script>
-
 </body>
 </html>
