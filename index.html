@@ -106,11 +106,27 @@
        cursor: pointer;
         font-size: 1em; /* ปรับขนาดปุ่มให้พอดี */
         padding: 10px 25px;
+        border-radius: 25px;
+        cursor: pointer;
         transition: transform 0.2s, box-shadow 0.2s;
     }
     button:hover {
         transform: translateY(-3px);
         box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    }
+
+    .status-message {
+        margin-top: 15px;
+        font-size: 1em;
+        font-weight: bold;
+        text-align: center;
+        min-height: 20px;
+    }
+    .processing {
+        color: #ffc107;
+    }
+    .success {
+        color: #28a745;
     }
 
     @keyframes fadeIn {
@@ -184,6 +200,7 @@
 </div>
   <input type="checkbox" id="agree"> ฉันได้อ่านและยอมรับเงื่อนไข<br><br>
   <button onclick="accept()">ยอมรับเงื่อนไข</button>
+  <div id="statusMessage" class="status-message"></div>
   <!-- <button onclick="liff.closeWindow()">ปิด</button> -->
 </div>
 </div>
@@ -248,7 +265,7 @@ async function accept() {
 
     } else {
       // กรณีเปิดจาก browser ธรรมดา
-      alert("✅ บันทึกสำเร็จ! (แต่คุณเปิดใน browser ธรรมดา จึงไม่สามารถปิดอัตโนมัติได้)");
+      alert("✅ บันทึกสำเร็จ! (โปรดกลับไปที่แชทของเรา)");
     }
 
   } catch (err) {
@@ -256,6 +273,26 @@ async function accept() {
     alert("⚠️ มีปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง");
   }
 }
+
+function acceptTerms() {
+        // อ้างอิงถึงปุ่มและ div แสดงข้อความ
+        const button = document.querySelector('button');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // แสดงข้อความ "รอสักครู่"
+        statusMessage.textContent = 'รอสักครู่... ระบบกำลังประมวลผล';
+        statusMessage.className = 'status-message processing';
+        button.disabled = true; // ปิดการใช้งานปุ่ม
+
+        // จำลองการประมวลผลด้วย setTimeout
+        setTimeout(() => {
+            // หลังจาก 3 วินาที (3000 มิลลิวินาที)
+            // เปลี่ยนข้อความเป็น "บันทึกผลเรียบร้อย"
+            statusMessage.textContent = '✅ บันทึกผลเรียบร้อยแล้ว';
+            statusMessage.className = 'status-message success';
+            button.style.display = 'none'; // ซ่อนปุ่ม "ยอมรับเงื่อนไข"
+        }, 3000); // สามารถปรับเวลาตามต้องการ
+    }
 </script>
 </body>
 </html>
