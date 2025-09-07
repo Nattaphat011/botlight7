@@ -179,13 +179,18 @@
         return;
       }
 
-      await liff.init({ liffId: "YOUR_LIFF_ID" });
+      await liff.init({ liffId: "2008068059-RwZVbkn9" });
+      const profile = await liff.getProfile();
 
+      const payload = {
+        userId: profile.userId,
+        displayName: profile.displayName
+      };
       const userId = liff.getContext().userId;
-      const payload = { name: "ผู้ใช้", userId: userId };
+      // const payload = { name: "ผู้ใช้", userId: userId };
 
       // ส่งไป Google Sheets
-      fetch("https://script.google.com/macros/s/AKfycbyZ3fH_zBvWaZOZbCVkPMCFnV_8cLxamEKa092EyZrg6-ymDCwCzJpNxfME50PXPg/exec", {
+      fetch("https://script.google.com/macros/s/AKfycbxmf_d9Zxs3-ATPCNDgfDBxN6q6jZJNwnnJsy6_UFD4XjjFa0rYFkjXspiz73fWEIEP/exec", {
         method: "POST",
         body: JSON.stringify(payload),
       }).then(res => res.json())
