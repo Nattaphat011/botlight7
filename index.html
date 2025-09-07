@@ -178,33 +178,48 @@
         alert("กรุณาทำเครื่องหมายเพื่อยืนยันการยอมรับ");
         return;
       }
-
       await liff.init({ liffId: "2008068059-RwZVbkn9" });
-      const profile = await liff.getProfile();
 
-      const payload = {
-        userId: profile.userId,
-        displayName: profile.displayName
-      };
-      const userId = liff.getContext().userId;
-      // const payload = { name: "ผู้ใช้", userId: userId };
+      // ถ้าไม่ได้ login ให้ login ก่อน
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
+      
+      // ดึง profile
+        const profile = await liff.getProfile();
+        const decodedID = liff.getDecodedIDToken(); // ได้ userId ที่แน่นอน
+
+        const payload = { 
+          name: profile.displayName,
+          userId: decodedID.sub   // userId จาก LINE Login
+    };
 
       // ส่งไป Google Sheets
       fetch("https://script.google.com/macros/s/AKfycbxmf_d9Zxs3-ATPCNDgfDBxN6q6jZJNwnnJsy6_UFD4XjjFa0rYFkjXspiz73fWEIEP/exec", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }).then(res => res.json())
-        .then(async data => {
-          if(data.status === "success") {
-            // ส่งข้อความกลับไป LINE OA
-            await liff.sendMessages([{
-              type: 'text',
-              text: 'คุณได้ยอมรับเงื่อนไขเรียบร้อยแล้ว'
-            }]);
-            liff.closeWindow(); // ปิดเว็บและกลับ LINE OA
-          }
-        });
-    }
-  </script>
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload),
+    })
+    .then(res => res.json())
+    .then(async data => {
+      if(data.status === "success") {
+        // ส่งข้อความกลับไป LINE OA (ใช้ได้เฉพาะเมื่อ LIFF อยู่ใน OA)
+        if (liff.isInClient()) {
+          await liff.sendMessages([{
+            type: 'text',
+            text: 'คุณได้ยอมรับเงื่อนไขเรียบร้อยแล้ว'
+          }]);
+        }
+        liff.closeWindow(); // ปิด popup กลับ LINE
+      }
+    })
+    .catch(err => {
+      console.error("Error:", err);
+    });
+  }
+</script>
 </body>
 </html>
