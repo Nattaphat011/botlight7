@@ -172,63 +172,62 @@
 </div>
   <input type="checkbox" id="agree"> ฉันได้อ่านและยอมรับเงื่อนไข<br><br>
   <button onclick="accept()">ยอมรับเงื่อนไข</button>
+  <button onclick="liff.closeWindow()">ทดสอบปิดหน้าต่าง</button>
+</div>
 
 <script>
   async function accept() {
-    // ✅ เช็คว่าติ๊กยอมรับแล้วหรือยัง
-    if (!document.getElementById("agree").checked) {
-      alert("กรุณาทำเครื่องหมายเพื่อยืนยันการยอมรับ");
+  if (!document.getElementById("agree").checked) {
+    alert("กรุณาทำเครื่องหมายเพื่อยืนยันการยอมรับ");
+    return;
+  }
+
+  try {
+    await liff.init({ liffId: "2008068059-RwZVbkn9" });
+
+    if (!liff.isLoggedIn()) {
+      liff.login();
       return;
     }
 
-    try {
-      // ✅ เริ่มต้น LIFF
-      await liff.init({ liffId: "2008068059-RwZVbkn9" });
+    const profile = await liff.getProfile();
+    const decodedID = liff.getDecodedIDToken();
 
-      // ✅ ถ้ายังไม่ login → ให้ login
-      if (!liff.isLoggedIn()) {
-        liff.login();
-        return;
-      }
+    const payload = {
+      name: profile.displayName,
+      userId: decodedID.sub
+    };
 
-      // ✅ ดึงข้อมูลผู้ใช้
-      const profile = await liff.getProfile();
-      const decodedID = liff.getDecodedIDToken();
+    const response = await fetch("https://script.google.com/macros/s/AKfycby6qxWXNPNXLbNmRaiXMN17nYiAStAoIBmujAdDq3u6gn9OSGfD3-gaJ78IH2neGgE3/exec", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
 
-      const payload = {
-        name: profile.displayName,
-        userId: decodedID.sub // userId ที่ถูกต้องจาก LINE Login
-      };
+    const data = await response.json();
 
-      // ✅ ส่งข้อมูลไปยัง Google Apps Script
-      const response = await fetch("https://script.google.com/macros/s/AKfycby6qxWXNPNXLbNmRaiXMN17nYiAStAoIBmujAdDq3u6gn9OSGfD3-gaJ78IH2neGgE3/exec", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await response.json();
-
-      if (data.status === "success") {
-        // ✅ ส่งข้อความกลับ LINE OA (เฉพาะเมื่อเปิดในแอป LINE)
+    if (data.status === "success") {
+      try {
         if (liff.isInClient()) {
           await liff.sendMessages([{
             type: "text",
             text: "✅ คุณได้ยอมรับเงื่อนไขเรียบร้อยแล้ว"
           }]);
         }
-
-        console.log("บันทึกสำเร็จ + ส่งข้อความกลับ OA แล้ว");
-        liff.closeWindow(); // ✅ ปิด LIFF กลับไปที่ OA
-      } else {
-        alert("❌ ไม่สามารถบันทึกข้อมูลได้");
-        console.error("GAS Response:", data);
+      } catch (e) {
+        console.warn("ส่งข้อความไม่สำเร็จ:", e);
+      } finally {
+        liff.closeWindow(); // ปิดไม่ว่าผลจะเป็นยังไง
       }
-    } catch (err) {
-      console.error("เกิดข้อผิดพลาด:", err);
-      alert("⚠️ มีปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง");
+    } else {
+      alert("❌ ไม่สามารถบันทึกข้อมูลได้");
     }
+  } catch (err) {
+    console.error("เกิดข้อผิดพลาด:", err);
+    alert("⚠️ มีปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง");
   }
+}
+
 </script>
 
 </body>
