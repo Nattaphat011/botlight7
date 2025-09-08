@@ -6,33 +6,119 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-  <h2>กรอกข้อมูลส่วนตัว</h2>
+  <style>
+      body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to right, #4b0082, #8a2be2); /* พื้นหลังสีม่วงไล่ระดับ */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    color: #fff;
+}
 
-  <label>เพศ:</label><br>
-  <select id="gender">
-    <option value="ชาย">ชาย</option>
-    <option value="หญิง">หญิง</option>
-    <option value="LGBTQ">LGBTQ</option>
-  </select><br><br>
+.container {
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+}
 
-  <label>อายุ:</label><br>
-  <select id="age">
-    <option>19</option><option>20</option><option>21</option>
-    <option>22</option><option>23</option><option>24</option><option>25</option>
-  </select><br><br>
+.card {
+    background: rgba(255, 255, 255, 0.15); /* พื้นหลังโปร่งใส (สีขาว 15%) */
+    backdrop-filter: blur(10px); /* ทำให้พื้นหลังเบลอ */
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3); /* ขอบโปร่งแสง */
+    padding: 40px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); /* เงา */
+    text-align: center;
+}
 
-  <label>สถานะ:</label><br>
-  <select id="status">
-    <option>โสด</option><option>มีแฟน</option><option>ไม่บอกหรอก</option>
-  </select><br><br>
+h2 {
+    margin-top: 0;
+    font-size: 2em;
+    font-weight: 600;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* เงาตัวอักษร */
+}
 
-  <label>ชั้นปี:</label><br>
-  <select id="year">
-    <option>ชั้นปีที่ 1</option><option>ชั้นปีที่ 2</option><option>ชั้นปีที่ 3</option><option>ชั้นปีที่ 4</option>
-  </select><br><br>
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
 
-  <button onclick="submitForm()">บันทึก</button>
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
 
+select, button {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.2); /* พื้นหลังโปร่งใส */
+    color: #fff;
+    font-size: 1em;
+    cursor: pointer;
+    box-sizing: border-box; /* ทำให้ขนาดรวมของ padding และ border ไม่เกินความกว้างที่กำหนด */
+}
+
+select option {
+    background-color: #4b0082; /* สีพื้นหลังของ dropdown */
+    color: #fff;
+}
+
+button {
+    background-color: #8a2be2; /* สีม่วงสำหรับปุ่ม */
+    border: none;
+    font-weight: bold;
+    margin-top: 10px;
+    transition: background-color 0.3s ease; /* เพิ่มการเปลี่ยนสีเมื่อ hover */
+}
+
+button:hover {
+    background-color: #6a0dad; /* สีม่วงเข้มขึ้นเมื่อเมาส์ชี้ */
+}
+  </style>
+<div class="container">
+        <div class="card">
+            <h2>กรอกข้อมูลส่วนตัว</h2>
+
+            <div class="form-group">
+                <label for="gender">เพศ:</label>
+                <select id="gender" name="gender">
+                    <option value="ชาย">ชาย</option>
+                    <option value="หญิง">หญิง</option>
+                    <option value="LGBTQ">LGBTQ</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="age">อายุ:</label>
+                <select id="age" name="age">
+                    <option>19</option><option>20</option><option>21</option>
+                    <option>22</option><option>23</option><option>24</option><option>25</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="status">สถานะ:</label>
+                <select id="status" name="status">
+                    <option>โสด</option><option>มีแฟน</option><option>ไม่บอกหรอก</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="year">ชั้นปี:</label>
+                <select id="year" name="year">
+                    <option>ชั้นปีที่ 1</option><option>ชั้นปีที่ 2</option><option>ชั้นปีที่ 3</option><option>ชั้นปีที่ 4</option>
+                </select>
+            </div>
+
+            <button type="submit" onclick="submitForm()">บันทึก</button>
+        </div>
+    </div>
   <script>
     async function submitForm() {
       await liff.init({ liffId: "2008068059-RwZVbkn9" });
@@ -48,7 +134,7 @@
       };
 
       // ส่งไป Google Sheets
-      await fetch("https://script.google.com/macros/s/AKfycbyO4i_BrJ1-lAAkjasWQ11MA_rn9_Kf891aUUO-kCjpNKuE7q7eoIgkBcXUIAzvVl7n/exec", {
+      await fetch("https://script.google.com/macros/s/AKfycbxi9Xh8DB6UTopYMj1O_xs3lWhqjWMEwkroQ0A91exJkWgFcn3Umjixs__368ohHdDr/exec", {
         method: "POST",
         body: JSON.stringify(payload)
       });
