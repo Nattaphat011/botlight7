@@ -211,6 +211,7 @@ window.onload = async function () {
   try {
     await liff.init({ liffId: "2008068059-RwZVbkn9" });
 
+    // ถ้ายังไม่ได้ login ให้ login
     if (!liff.isLoggedIn()) {
       liff.login();
     }
@@ -227,10 +228,10 @@ async function accept() {
   }
 
   try {
-    // ✅ ดึง profile
+    // ดึง profile
     const profile = await liff.getProfile();
 
-    // ✅ หาค่า userId
+    // userId: ใช้จาก context ถ้าเปิดใน OA, ถ้าเปิดจาก Login ให้ใช้ decodedID
     let userId = "";
     if (liff.getContext() && liff.getContext().userId) {
       userId = liff.getContext().userId;
@@ -239,112 +240,39 @@ async function accept() {
       userId = decodedID ? decodedID.sub : "";
     }
 
-    // ✅ สร้าง payload แบบใหม่
     const payload = {
-      userId: userId,
-      displayName: profile.displayName,
-      accepted: true
+      name: profile.displayName,
+      userId: userId
     };
 
-    // ✅ เก็บ userId และชื่อไว้ใน localStorage สำหรับ form.html
-    localStorage.setItem("userId", userId);
-    localStorage.setItem("displayName", profile.displayName);
-
-    // ✅ ส่งข้อมูลการยอมรับไปยัง Google Sheets
-    fetch("https://script.google.com/macros/s/AKfycbyO4i_BrJ1-lAAkjasWQ11MA_rn9_Kf891aUUO-kCjpNKuE7q7eoIgkBcXUIAzvVl7n/exec", {
+    // ✅ ส่งข้อมูลไป Google Sheets (ไม่ต้องรอ response)
+    await fetch("https://script.google.com/macros/s/AKfycbzzh0_X_i2FZ2GP2MDpq35PupfZZzypL685S0DjwtDo-_yyWPFb4FIfS9umK8wD8sdf/exec", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      mode: "no-cors"
     });
 
-    // ✅ เปลี่ยนหน้าไปกรอกข้อมูลส่วนตัว (form.html)
-    window.location.href = "form.html";
+    // ✅ ส่งข้อความกลับเข้า LINE OA
+    if (liff.isInClient()) {
+      await liff.sendMessages([{
+        type: "text",
+        text: "✅ ได้ยอมรับเงื่อนไขเรียบร้อยแล้ว"
+      }]);
+
+      // ปิดหน้าต่าง LIFF → กลับเข้าแชท OA ต่อทันที
+      liff.closeWindow();
+
+    } else {
+      // กรณีเปิดจาก browser ธรรมดา
+      alert("✅ บันทึกสำเร็จ! (โปรดกลับไปที่แชทของเรา)");
+    }
 
   } catch (err) {
     console.error("เกิดข้อผิดพลาด:", err);
     alert("⚠️ มีปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง");
   }
-
-
-//  เริ่ม init ตอนโหลดหน้า
-// window.onload = async function () {
-//   try {
-//     await liff.init({ liffId: "2008068059-RwZVbkn9" });
-
-//     // ถ้ายังไม่ได้ login ให้ login
-//     if (!liff.isLoggedIn()) {
-//       liff.login();
-//     }
-//   } catch (err) {
-//     console.error("LIFF init error:", err);
-//     alert("⚠️ ไม่สามารถเชื่อมต่อ LIFF ได้");
-//   }
-// };
-
-// async function accept() {
-//   if (!document.getElementById("agree").checked) {
-//     alert("กรุณาทำเครื่องหมายเพื่อยืนยันการยอมรับ");
-//     return;
-//   }
-
-//   try {
-//     // ดึง profile
-//     const profile = await liff.getProfile();
-
-//     // userId: ใช้จาก context ถ้าเปิดใน OA, ถ้าเปิดจาก Login ให้ใช้ decodedID
-//     let userId = "";
-//     if (liff.getContext() && liff.getContext().userId) {
-//       userId = liff.getContext().userId;
-//     } else {
-//       const decodedID = liff.getDecodedIDToken();
-//       userId = decodedID ? decodedID.sub : "";
-//     }
-
-//     const payload = {
-//       name: profile.displayName,
-//       userId: userId
-//     };
-
-//     // เก็บ userId ไว้ใน localStorage เพื่อนำไปใช้ใน form.html
-//     localStorage.setItem("userId", userId);
-//     localStorage.setItem("displayName", profile.displayName);
-
-//     // 👉 เปลี่ยนหน้าไปกรอกข้อมูลส่วนตัว
-//     window.location.href = "form.html";
-
-//     // ✅ ส่งข้อมูลไป Google Sheets (ไม่ต้องรอ response)
-//     await fetch("https://script.google.com/macros/s/AKfycbyO4i_BrJ1-lAAkjasWQ11MA_rn9_Kf891aUUO-kCjpNKuE7q7eoIgkBcXUIAzvVl7n/exec", {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify(payload),
-//       mode: "no-cors"
-//     });
-
-//       } catch (err) {
-//     console.error("เกิดข้อผิดพลาด:", err);
-//     alert("⚠️ มีปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง");
-//   }
-// }
-    // ✅ ส่งข้อความกลับเข้า LINE OA
-    // if (liff.isInClient()) {
-    //   await liff.sendMessages([{
-    //     type: "text",
-    //     text: "✅ ได้ยอมรับเงื่อนไขเรียบร้อยแล้ว"
-    //   }]);
-
-      // ปิดหน้าต่าง LIFF → กลับเข้าแชท OA ต่อทันที
-//       liff.closeWindow();
-
-//     } else {
-//       // กรณีเปิดจาก browser ธรรมดา
-//       alert("✅ บันทึกสำเร็จ! (โปรดกลับไปที่แชทของเรา)");
-//     }
-
-//   } catch (err) {
-//     console.error("เกิดข้อผิดพลาด:", err);
-//     alert("⚠️ มีปัญหาในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง");
-//   }
-// }
+}
 
 function acceptTerms() {
         // อ้างอิงถึงปุ่มและ div แสดงข้อความ
@@ -365,7 +293,8 @@ function acceptTerms() {
             button.style.display = 'none'; // ซ่อนปุ่ม "ยอมรับเงื่อนไข"
         }, 3000); // สามารถปรับเวลาตามต้องการ
     }
-  }
 </script>
 </body>
 </html>
+
+ในส่วนนี้เป็นการยอมรับเงื่อนไข เมื่อกดยอมรับก็เด้งออกไปหน้าแชทไลน์ทันที ต้องการให้ปรับปรุงและให้สอดคล้องกับที่กำลังเสนอไปก่อนหน้า
